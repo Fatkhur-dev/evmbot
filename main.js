@@ -1,4 +1,4 @@
-const { ethers } = require('ethers');
+const { ethers,utils  } = require('ethers');
 
 
 // RPC information
@@ -13,10 +13,12 @@ const { ethers } = require('ethers');
 // const rpc = 'https://optimism-mainnet.infura.io/v3/71c6aaa25cd745f4a9122632cde79935';
 
 // arbitrum rpc
-const rpc = 'https://arbitrum-mainnet.infura.io/v3/71c6aaa25cd745f4a9122632cde79935';
+// const rpc = 'https://arbitrum-mainnet.infura.io/v3/71c6aaa25cd745f4a9122632cde79935';
 
 // polygon rpc
 // const rpc = 'https://polygon-mainnet.infura.io/v3/71c6aaa25cd745f4a9122632cde79935';
+
+const rpc = "https://opbnb-mainnet-rpc.bnbchain.org"
 
 
 
@@ -34,7 +36,13 @@ const wallet = new ethers.Wallet(privateKey, provider);
 
 
 // 自定义十六进制数据
-const hexData = "0x646174613a2c7b2270223a22666169722d3230222c226f70223a226d696e74222c227469636b223a2266616972222c22616d74223a2231303030227d"; // 替换为你想要的十六进制数据
+// const hexData = "0x646174613a2c7b2270223a22666169722d3230222c226f70223a226d696e74222c227469636b223a2266616972222c22616d74223a2231303030227d"; // 替换为你想要的十六进制数据
+
+//源数据
+const sourceData = 'data:,{"p":"opb-20","op":"mint","tick":"opbs","amt":"100000000"}'
+//转换成16进制
+const hexData = utils.toUtf8Bytes(sourceData);
+
 
 // 获取当前账户的 nonce
 async function getCurrentNonce(wallet) {
@@ -66,19 +74,15 @@ async function getGasLimit() {
 }
 
 // 转账交易
-async function sendTransaction(nonce) {
-  const currentGasPrice = await getGasPrice(); // 获取实时 gasPrice
-  const increasedGasPrice = currentGasPrice.mul(110).div(100); // 在当前 gasPrice 上增加10%
+async function sendTransaction(nonce,gasPrice) {
   const gasLimit = await getGasLimit(); 
-
-  console.log(`currentGasPrice --- ${currentGasPrice}   giveGas--- ${increasedGasPrice}`);
 
   const transaction = {
     to: toAddress,
     value: ethers.utils.parseEther("0"), // 替换为你要转账的金额
     data: hexData, 
     nonce: nonce, 
-    gasPrice: increasedGasPrice, 
+    gasPrice: gasPrice, 
     gasLimit: gasLimit, 
   };
 
@@ -95,9 +99,12 @@ const repeatCount = 2; // 你想要打多少张，这里就设置多少
 
 async function sendTransactions() {
   const currentNonce = await getCurrentNonce(wallet);
+  const gasPrice = await getGasPrice(); // 获取实时 gas 价格
+  const increasedGasPrice = gasPrice.mul(110).div(100); // 在当前 gasPrice 上增加10%
+  console.log(`currentGasPrice --- ${gasPrice}   giveGas--- ${increasedGasPrice}`);
 
   for (let i = 0; i < repeatCount; i++) {
-    const gasPrice = await getGasPrice(); // 获取实时 gas 价格
+ 
     await sendTransaction(currentNonce + i, gasPrice);
   }
 }
